@@ -1,5 +1,6 @@
 
 /// A Struct for searching through the topic tree
+#[derive(Clone)]
 pub struct TopicName {
     pub topic_levels: Vec<String>,
     pub length: usize,
