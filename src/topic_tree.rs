@@ -12,16 +12,22 @@ pub type ClientId = u64;
 /// topic can be queried from here
 #[derive(Default, Debug)]
 pub(crate) struct TopicTree {
-    root_node: TopicNode
+    root_node: TopicNode,
+    subscribers: u64
 }
 
 impl TopicTree {
-    pub(crate) fn get_routes(&self, publish_topic: TopicName) -> Vec<SubScriber> {
-            self.root_node.get_routes(publish_topic)
+    pub(crate) fn get_routes(&self, publish_topic: &TopicName) -> Vec<SubScriber> {
+        let mut results = Vec::with_capacity(self.subscribers as usize);
+        // self.root_node.get_routes_rec(0, publish_topic, &mut results);
+        // self.root_node.get_routes(publish_topic, &mut results);
+        self.root_node.get_routes_arr(publish_topic, &mut results);
+        results
     }
 
     pub(crate) fn add_subscription(&mut self, topic_filter: TopicFilter, client_id: ClientId, qos: QoS) {
-        self.root_node.add_subscriber(topic_filter, client_id, qos)
+        self.root_node.add_subscriber(topic_filter, client_id, qos);
+        self.subscribers += 1;
     }
 }
 
@@ -36,33 +42,83 @@ struct TopicNode {
 }
 
 impl TopicNode {
-    fn get_routes(&self, publish_topic: TopicName) -> Vec<SubScriber> {
-        let mut results: Vec<SubScriber> = Vec::new();
-        let mut this_level_nodes: Vec<&TopicNode> = Vec::new();
-        let mut next_level_nodes: Vec<&TopicNode> = Vec::new();
-        next_level_nodes.push(self);
+    /// All 3 implementations of get routes do the same thing, the array version is currently the
+    /// fastest and therefore used, but it is also the least readable
+    fn get_routes(&self, publish_topic: &TopicName, results: &mut Vec<SubScriber>) {
+        let mut vec1: Vec<&TopicNode> = Vec::with_capacity(3);
+        let mut vec2: Vec<&TopicNode> = Vec::with_capacity(3);
+        vec2.push(self);
         for i in 0..publish_topic.length {
-            let topiclevel = &publish_topic.topic_levels[i];
-            this_level_nodes = next_level_nodes.clone();
-            next_level_nodes = Vec::new();
-            for curr_node in this_level_nodes {
+            // let topiclevel = &publish_topic.topic_levels[i];
+            let topiclevel = publish_topic.get_part(i).unwrap();
+            std::mem::swap(&mut vec1, &mut vec2);
+            vec2.clear();
+            for curr_node in vec1.iter() {
                 if let Some(routeinfo) = curr_node.multi_level_wildcard.as_deref() {
                     results.extend(routeinfo.get_subs())
                 }
                 if let Some(single_wildcard_match) = curr_node.single_level_wildcard.as_deref() {
-                    next_level_nodes.push(single_wildcard_match);
+                    vec2.push(single_wildcard_match);
                 }
                 if let Some(literal_match) = curr_node.sub_nodes.get(topiclevel) {
-                    next_level_nodes.push(literal_match);
+                    vec2.push(literal_match);
                 }
             }
         }
-        for final_node in next_level_nodes {
+        for final_node in vec2 {
+            let literal_match = final_node.content.get_subs();
+            results.extend(literal_match);
+        };
+    }
+
+    fn get_routes_arr(&self, publish_topic: &TopicName, results: &mut Vec<SubScriber>) {
+        let mut curr_iter: bool = false;
+        let mut iter_len = [0usize,1usize];
+        let mut iter_arr = [[self, self],[self, self]];
+        for i in 0..publish_topic.length {
+            // let topiclevel = &publish_topic.topic_levels[i];
+            let topiclevel = publish_topic.get_part(i).unwrap();
+            iter_len[curr_iter as usize] = 0;
+            curr_iter = !curr_iter;
+            for j in 0..iter_len[curr_iter as usize] {
+                let curr_node = iter_arr[curr_iter as usize][j];
+                if let Some(routeinfo) = curr_node.multi_level_wildcard.as_deref() {
+                    results.extend(routeinfo.get_subs())
+                }
+                if let Some(single_wildcard_match) = curr_node.single_level_wildcard.as_deref() {
+                    iter_arr[!curr_iter as usize][iter_len[!curr_iter as usize]] = single_wildcard_match;
+                    iter_len[!curr_iter as usize] += 1;
+                }
+                if let Some(literal_match) = curr_node.sub_nodes.get(topiclevel) {
+                    iter_arr[!curr_iter as usize][iter_len[!curr_iter as usize]] = literal_match;
+                    iter_len[!curr_iter as usize] += 1;
+                }
+            }
+        }
+        curr_iter = !curr_iter;
+        for j in 0..iter_len[curr_iter as usize] {
+            let final_node = iter_arr[curr_iter as usize][j];
             let literal_match = final_node.content.get_subs();
             results.extend(literal_match);
         }
+    }
 
-        results
+    fn get_routes_rec(&self, curr_level: usize, publish_topic: &TopicName, results: &mut Vec<SubScriber>) {
+
+        if let Some(routeinfo) = self.multi_level_wildcard.as_deref() {
+            results.extend(routeinfo.get_subs())
+        }
+        if curr_level < publish_topic.length {
+            let topiclevel = publish_topic.get_part(curr_level).unwrap();
+            if let Some(single_wildcard_match) = self.single_level_wildcard.as_deref() {
+                single_wildcard_match.get_routes_rec(curr_level+1, publish_topic, results)
+            };
+            if let Some(literal_match) = self.sub_nodes.get(topiclevel) {
+                literal_match.get_routes_rec(curr_level+1, publish_topic, results);
+            }
+        } else {
+            results.extend(self.content.get_subs())
+        }
     }
 
     fn add_subscriber(&mut self, topic_filter: TopicFilter, client_id: ClientId, qos: QoS) {
@@ -189,7 +245,7 @@ impl ClientGroup {
 }
 
 #[derive(Clone, Debug)]
-pub(crate)struct SubScriber {
-    client_id: ClientId,
-    qos: QoS
+pub struct SubScriber {
+    pub client_id: ClientId,
+    pub qos: QoS
 }
