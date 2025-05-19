@@ -17,7 +17,7 @@ pub struct TopicTree {
 }
 
 impl TopicTree {
-    pub(crate) fn get_routes(&self, publish_topic: &TopicName) -> Vec<SubScriber> {
+    pub fn get_routes(&self, publish_topic: &TopicName) -> Vec<SubScriber> {
         let mut results = Vec::with_capacity(self.subscribers as usize);
         // self.root_node.get_routes_rec(0, publish_topic, &mut results);
         // self.root_node.get_routes(publish_topic, &mut results);
@@ -25,7 +25,7 @@ impl TopicTree {
         results
     }
 
-    pub(crate) fn add_subscription(
+    pub fn add_subscription(
         &mut self,
         topic_filter: TopicFilter,
         client_id: ClientId,
