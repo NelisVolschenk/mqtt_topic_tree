@@ -1,7 +1,6 @@
 use std::sync::{Arc};
 use left_right::{Absorb, ReadHandle, WriteHandle};
 use parking_lot::Mutex;
-// use tokio::sync::Mutex;
 use crate::sync::TopicTreeOperations::AddSubscription;
 use crate::topic::{QoS, TopicFilter, TopicName};
 use crate::topic_tree::{ClientId, SubScriber, TopicTree};
@@ -47,6 +46,7 @@ impl MqttTopicTree {
         let mut write_handle = self.write_handle.lock();
         let operation = AddSubscription(topic_filter, client_id, qos);
         write_handle.append(operation);
+        write_handle.publish();
     }
 
     pub fn get_routes(&self, publish_topic: &TopicName) -> Vec<SubScriber> {
