@@ -1,11 +1,8 @@
-use crate::topic::{QoS, TopicFilter, TopicName};
+use crate::topic::{TopicFilter, TopicName};
 use rand::random;
 use std::collections::HashMap;
 use std::ops::DerefMut;
-
-/// ClientId is the internal id assigned to the client by the server, u64 will never overflow, so we
-/// can safely assume this is unique
-pub type ClientId = u64;
+use crate::{ClientId, QoS};
 
 /// The TopicTree is a tree structure containing all the routing information for the subscribers
 /// Subscriptions are added or removed from this structure and all clients that are subscribed to a

@@ -1,9 +1,10 @@
 use std::sync::{Arc};
 use left_right::{Absorb, ReadHandle, WriteHandle};
 use parking_lot::Mutex;
+use crate::client_types::{ClientId, QoS};
 use crate::sync::TopicTreeOperations::AddSubscription;
-use crate::topic::{QoS, TopicFilter, TopicName};
-use crate::topic_tree::{ClientId, SubScriber, TopicTree};
+use crate::topic::{TopicFilter, TopicName};
+use crate::topic_tree::{SubScriber, TopicTree};
 
 pub enum  TopicTreeOperations {
     AddSubscription(TopicFilter, ClientId, QoS),

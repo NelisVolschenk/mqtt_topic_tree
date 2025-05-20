@@ -1,15 +1,18 @@
 pub mod sync;
 pub mod topic;
 pub mod topic_tree;
+mod client_types;
 
-
+pub use crate::sync::MqttTopicTree;
+pub use crate::topic::{TopicFilter, TopicName};
+pub use crate::client_types::{ClientId, QoS};
 
 #[cfg(test)]
 mod tests {
-    use crate::topic::{QoS, TopicFilter, TopicName};
-    use crate::topic_tree::{ClientId, TopicTree};
+    use crate::topic::{TopicFilter, TopicName};
+    use crate::topic_tree::{TopicTree};
     use std::time::Instant;
-    use crate::sync::MqttTopicTree;
+    use crate::{ClientId, MqttTopicTree, QoS};
 
     #[test]
     fn test_add_sub() {

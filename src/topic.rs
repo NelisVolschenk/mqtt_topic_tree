@@ -69,19 +69,6 @@ pub enum TopicNameError {
     TooLong,
 }
 
-/// Packet delivery [Quality of Service] level.
-///
-/// [Quality of Service]: http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718099
-#[derive(Clone, Debug)]
-pub enum QoS {
-    /// `QoS 0`. At most once. No ack needed.
-    Level0 = 0,
-    /// `QoS 1`. At least once. One ack needed.
-    Level1 = 1,
-    /// `QoS 2`. Exactly once. Two acks needed.
-    Level2 = 2,
-}
-
 #[derive(Clone)]
 pub struct TopicFilter {
     pub topic_levels: Vec<String>,
