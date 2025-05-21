@@ -1,5 +1,4 @@
-use crate::topic::{TopicFilter, TopicName};
-use crate::{ClientId, QoS};
+use crate::{ClientId, QoS, TopicFilter, TopicName};
 use rand::random;
 use std::collections::HashMap;
 use std::ops::DerefMut;
@@ -14,7 +13,7 @@ pub struct TopicTree {
 }
 
 impl TopicTree {
-    pub fn get_subscriptions(&self, publish_topic: &TopicName) -> Vec<SubScriber> {
+    pub fn get_subscriptions(&self, publish_topic: &TopicName) -> Vec<Subscriber> {
         let mut results = Vec::with_capacity(self.subscribers as usize);
         // self.root_node
         //     .get_subscriptions_rec(0, publish_topic, &mut results);
@@ -54,7 +53,7 @@ impl TopicNode {
     /// All 3 implementations of get routes do the same thing, the array version is currently the
     /// fastest and therefore used, but it is also the least readable
     #[allow(dead_code)]
-    fn get_subscriptions(&self, publish_topic: &TopicName, results: &mut Vec<SubScriber>) {
+    fn get_subscriptions(&self, publish_topic: &TopicName, results: &mut Vec<Subscriber>) {
         let mut vec1: Vec<&TopicNode> = Vec::with_capacity(3);
         let mut vec2: Vec<&TopicNode> = Vec::with_capacity(3);
         vec2.push(self);
@@ -82,7 +81,7 @@ impl TopicNode {
     }
 
     #[allow(dead_code)]
-    fn get_subscriptions_arr(&self, publish_topic: &TopicName, results: &mut Vec<SubScriber>) {
+    fn get_subscriptions_arr(&self, publish_topic: &TopicName, results: &mut Vec<Subscriber>) {
         let mut curr_iter: bool = false;
         let mut iter_len = [0usize, 1usize];
         let mut iter_arr = [[self, self], [self, self]];
@@ -120,7 +119,7 @@ impl TopicNode {
         &self,
         curr_level: usize,
         publish_topic: &TopicName,
-        results: &mut Vec<SubScriber>,
+        results: &mut Vec<Subscriber>,
     ) {
         if let Some(routeinfo) = self.multi_level_wildcard.as_deref() {
             results.extend(routeinfo.get_subscriptions())
@@ -253,12 +252,12 @@ struct SubscriptionInfo {
 }
 
 impl SubscriptionInfo {
-    fn get_subscriptions(&self) -> Vec<SubScriber> {
-        let mut subs: Vec<SubScriber> = self.client_subscriptions
+    fn get_subscriptions(&self) -> Vec<Subscriber> {
+        let mut subs: Vec<Subscriber> = self.client_subscriptions
             .iter()
-            .map(|x| SubScriber{client_id: x.0.clone(), qos: x.1.clone() })
+            .map(|x| Subscriber {client_id: x.0.clone(), qos: x.1.clone() })
             .collect();
-        let shared_sub: Vec<SubScriber> = self
+        let shared_sub: Vec<Subscriber> = self
             .shared_subscriptions
             .iter()
             .map(|x| x.get_next_client())
@@ -276,7 +275,7 @@ impl SubscriptionInfo {
     }
 
     fn add_shared_subscription(&mut self, client_id: ClientId, qos: QoS, shared_group: String) {
-        let subscriber = SubScriber{client_id, qos};
+        let subscriber = Subscriber {client_id, qos};
         if let Some(group) = self
             .shared_subscriptions
             .iter_mut()
@@ -303,26 +302,26 @@ impl SubscriptionInfo {
 #[derive(Debug, Clone)]
 struct ClientGroup {
     group_id: String,
-    clients: Vec<SubScriber>,
+    clients: Vec<Subscriber>,
 }
 
 impl ClientGroup {
-    fn new(group_id: String, subscriber: SubScriber) -> Self {
+    fn new(group_id: String, subscriber: Subscriber) -> Self {
         Self {
             group_id,
             clients: Vec::from([subscriber]),
         }
     }
-    fn get_client_by_number(&self, id: u64) -> SubScriber {
+    fn get_client_by_number(&self, id: u64) -> Subscriber {
         let idx = id as usize % self.clients.len();
         self.clients[idx].clone()
     }
 
-    fn get_next_client(&self) -> SubScriber {
+    fn get_next_client(&self) -> Subscriber {
         self.get_client_by_number(random())
     }
 
-    fn add_subscriber(&mut self, subscriber: SubScriber) {
+    fn add_subscriber(&mut self, subscriber: Subscriber) {
         self.clients.push(subscriber);
     }
 
@@ -337,7 +336,7 @@ impl ClientGroup {
 }
 
 #[derive(Clone, Debug)]
-pub struct SubScriber {
+pub struct Subscriber {
     pub client_id: ClientId,
     pub qos: QoS,
 }

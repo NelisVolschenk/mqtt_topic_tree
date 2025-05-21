@@ -1,10 +1,8 @@
 use std::sync::{Arc};
 use left_right::{Absorb, ReadHandle, WriteHandle};
 use parking_lot::Mutex;
-use crate::client_types::{ClientId, QoS};
 use crate::sync::TopicTreeOperations::{AddSubscription, RemoveSubscription};
-use crate::topic::{TopicFilter, TopicName};
-use crate::topic_tree::{SubScriber, TopicTree};
+use crate::{ClientId, QoS, Subscriber, TopicFilter, TopicName, TopicTree};
 
 pub enum  TopicTreeOperations {
     AddSubscription(TopicFilter, ClientId, QoS),
@@ -65,7 +63,7 @@ impl MqttTopicTree {
         write_handle.publish();
     }
 
-    pub fn get_subscriptions(&self, publish_topic: &TopicName) -> Vec<SubScriber> {
+    pub fn get_subscriptions(&self, publish_topic: &TopicName) -> Vec<Subscriber> {
         let a = self.read_handle.enter().unwrap();
         a.get_subscriptions(publish_topic)
     }
