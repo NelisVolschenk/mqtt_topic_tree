@@ -61,7 +61,7 @@ mod tests {
     }
 
     #[test]
-    fn test_sync() {
+    fn test_sync_speed() {
         let t = MqttTopicTree::default();
         let s1 = TopicFilter::try_from("home/+/+".to_owned()).unwrap();
         t.add_subscription(s1, 1, QoS::Level0);
@@ -78,5 +78,20 @@ mod tests {
         let t_end = Instant::now();
         let t_delta = (t_end - t_start).as_nanos() / num_ops as u128;
         println!("MqttTopicTree Lookup took {t_delta} ns per iteration");
+    }
+
+    #[test]
+    fn send_and_sync() {
+        let t = MqttTopicTree::default();
+        is_send(t.clone());
+        is_sync(t.clone());
+    }
+
+    fn is_sync<T: Sync>(a: T) {
+        return;
+    }
+
+    fn is_send<T: Send>(a: T) {
+        return;
     }
 }

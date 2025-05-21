@@ -26,6 +26,7 @@ impl Absorb<TopicTreeOperations> for TopicTree {
     }
 }
 
+#[derive(Clone)]
 pub struct MqttTopicTree {
     read_handle: ReadHandle<TopicTree>,
     write_handle: Arc<Mutex<WriteHandle<TopicTree, TopicTreeOperations>>>
