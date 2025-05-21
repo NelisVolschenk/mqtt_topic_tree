@@ -2,12 +2,13 @@ use std::sync::{Arc};
 use left_right::{Absorb, ReadHandle, WriteHandle};
 use parking_lot::Mutex;
 use crate::client_types::{ClientId, QoS};
-use crate::sync::TopicTreeOperations::AddSubscription;
+use crate::sync::TopicTreeOperations::{AddSubscription, RemoveSubscription};
 use crate::topic::{TopicFilter, TopicName};
 use crate::topic_tree::{SubScriber, TopicTree};
 
 pub enum  TopicTreeOperations {
     AddSubscription(TopicFilter, ClientId, QoS),
+    RemoveSubscription(TopicFilter, ClientId),
 }
 
 impl Absorb<TopicTreeOperations> for TopicTree {
@@ -15,6 +16,9 @@ impl Absorb<TopicTreeOperations> for TopicTree {
         match operation {
             AddSubscription(topic_filter, client_id, qos) => {
                 self.add_subscription(topic_filter.clone(), client_id.clone(), qos.clone())
+            }
+            RemoveSubscription(topic_filer, client_id) => {
+                self.remove_subscription(topic_filer.clone(), client_id.clone())
             }
         }
     }
@@ -46,6 +50,17 @@ impl MqttTopicTree {
     ) {
         let mut write_handle = self.write_handle.lock();
         let operation = AddSubscription(topic_filter, client_id, qos);
+        write_handle.append(operation);
+        write_handle.publish();
+    }
+
+    pub fn remove_subscription(
+        &self,
+        topic_filter: TopicFilter,
+        client_id: ClientId,
+    ) {
+        let mut write_handle = self.write_handle.lock();
+        let operation = RemoveSubscription(topic_filter, client_id);
         write_handle.append(operation);
         write_handle.publish();
     }

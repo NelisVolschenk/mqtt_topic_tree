@@ -4,15 +4,14 @@ pub mod topic_tree;
 mod client_types;
 
 pub use crate::sync::MqttTopicTree;
+pub use crate::topic_tree::TopicTree;
 pub use crate::topic::{TopicFilter, TopicName};
 pub use crate::client_types::{ClientId, QoS};
 
 #[cfg(test)]
 mod tests {
-    use crate::topic::{TopicFilter, TopicName};
-    use crate::topic_tree::{TopicTree};
     use std::time::Instant;
-    use crate::{ClientId, MqttTopicTree, QoS};
+    use crate::{ClientId, MqttTopicTree, QoS, TopicFilter, TopicName, TopicTree};
 
     #[test]
     fn test_add_remove_sub() {
@@ -80,5 +79,4 @@ mod tests {
         let t_delta = (t_end - t_start).as_nanos() / num_ops as u128;
         println!("MqttTopicTree Lookup took {t_delta} ns per iteration");
     }
-
 }
