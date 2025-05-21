@@ -50,8 +50,8 @@ impl MqttTopicTree {
         write_handle.publish();
     }
 
-    pub fn get_routes(&self, publish_topic: &TopicName) -> Vec<SubScriber> {
+    pub fn get_subscriptions(&self, publish_topic: &TopicName) -> Vec<SubScriber> {
         let a = self.read_handle.enter().unwrap();
-        a.get_routes(publish_topic)
+        a.get_subscriptions(publish_topic)
     }
 }

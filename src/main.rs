@@ -1,6 +1,7 @@
 use std::hint::black_box;
 use std::time::Instant;
-use mqtt_topic_tree::topic::{QoS, TopicFilter, TopicName};
+use mqtt_topic_tree::QoS;
+use mqtt_topic_tree::topic::{TopicFilter, TopicName};
 use mqtt_topic_tree::topic_tree::TopicTree;
 
 fn main() {
@@ -41,6 +42,6 @@ async fn run_topic_tree() {
 async fn operation(topictree: &TopicTree, num_ops: u32, top: &str) {
     for i in 0..num_ops {
         let topic = black_box(TopicName::try_from(black_box(top.to_owned())).unwrap());
-        let ids = black_box(topictree.get_routes(black_box(&topic)));
+        let ids = black_box(topictree.get_subscriptions(black_box(&topic)));
     }
 }
