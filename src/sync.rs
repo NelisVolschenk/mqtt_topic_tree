@@ -1,5 +1,5 @@
 use std::sync::{Arc};
-use left_right::{Absorb, ReadHandle, WriteHandle};
+use left_right::{Absorb, ReadHandle, ReadHandleFactory, WriteHandle};
 use parking_lot::Mutex;
 use crate::sync::TopicTreeOperations::{AddSubscription, RemoveSubscription};
 use crate::{ClientId, QoS, Subscriber, TopicFilter, TopicName, TopicTree};
@@ -26,6 +26,32 @@ impl Absorb<TopicTreeOperations> for TopicTree {
     }
 }
 
+pub struct MqttTopicTreeCreator {
+    write_handle: Arc<Mutex<WriteHandle<TopicTree, TopicTreeOperations>>>,
+    factory: ReadHandleFactory<TopicTree>
+}
+
+impl MqttTopicTreeCreator {
+    pub fn to_mqtt_topic_tree(self) -> MqttTopicTree {
+        let read_handle = self.factory.handle();
+        MqttTopicTree {
+            read_handle,
+            write_handle: self.write_handle
+        }
+    }
+}
+
+impl Default for MqttTopicTreeCreator {
+    fn default() -> Self {
+        let (write, read) = left_right::new::<TopicTree, TopicTreeOperations>();
+        let factory = write.factory();
+        Self {
+            write_handle: Arc::new(Mutex::new(write)),
+            factory
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct MqttTopicTree {
     read_handle: ReadHandle<TopicTree>,
@@ -33,13 +59,6 @@ pub struct MqttTopicTree {
 }
 
 impl MqttTopicTree {
-    pub fn default() -> Self {
-        let (write, read) = left_right::new::<TopicTree, TopicTreeOperations>();
-        Self {
-            read_handle: read,
-            write_handle: Arc::new(Mutex::new(write))
-        }
-    }
 
     pub fn add_subscription(
         &self,
