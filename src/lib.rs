@@ -4,7 +4,7 @@ pub mod topic_tree;
 mod client_types;
 
 pub use crate::sync::MqttTopicTree;
-pub use crate::topic_tree::TopicTree;
+pub use crate::topic_tree::{TopicTree, Subscriber};
 pub use crate::topic::{TopicFilter, TopicName};
 pub use crate::client_types::{ClientId, QoS};
 
