@@ -23,7 +23,7 @@ mod tests {
         t.add_subscription(s2, 2, QoS::Level0);
         let s3 = TopicFilter::try_from("home/+/#".to_owned()).unwrap();
         t.add_subscription(s3, 3, QoS::Level0);
-        let s4 = TopicFilter::try_from("home/bedroom/light".to_owned()).unwrap();
+        let s4 = TopicFilter::try_from("$share/group1/home/bedroom/light".to_owned()).unwrap();
         t.add_subscription(s4, 4, QoS::Level0);
         let s5 = TopicFilter::try_from("home/bedroom/light".to_owned()).unwrap();
         t.add_subscription(s5.clone(), 5, QoS::Level0);
@@ -53,17 +53,17 @@ mod tests {
         let topic = TopicName::try_from("home/bedroom/light".to_owned()).unwrap();
         let num_ops = 100000;
         let t_start = Instant::now();
-        for i in 0..num_ops {
-            let ids = t.get_subscriptions(&topic);
+        for _ in 0..num_ops {
+            let _ = t.get_subscriptions(&topic);
         }
         let t_end = Instant::now();
         let t_delta = (t_end - t_start).as_nanos() / num_ops as u128;
-        println!("Lookup took {t_delta} ns per iteration");
+        println!("Topictree Lookup took {t_delta} ns per iteration");
     }
 
     #[test]
     fn test_sync() {
-        let t = MqttTopicTree::new();
+        let t = MqttTopicTree::default();
         let s1 = TopicFilter::try_from("home/+/+".to_owned()).unwrap();
         t.add_subscription(s1, 1, QoS::Level0);
         let s2 = TopicFilter::try_from("home/#".to_owned()).unwrap();
@@ -73,12 +73,12 @@ mod tests {
         let topic = TopicName::try_from("home/bedroom/light".to_owned()).unwrap();
         let num_ops = 100000;
         let t_start = Instant::now();
-        for i in 0..num_ops {
-            let ids = t.get_subscriptions(&topic);
+        for _ in 0..num_ops {
+            let _ = t.get_subscriptions(&topic);
         }
         let t_end = Instant::now();
         let t_delta = (t_end - t_start).as_nanos() / num_ops as u128;
-        println!("Lookup took {t_delta} ns per iteration");
+        println!("MqttTopicTree Lookup took {t_delta} ns per iteration");
     }
 
 }

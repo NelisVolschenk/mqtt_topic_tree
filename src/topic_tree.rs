@@ -16,10 +16,10 @@ pub struct TopicTree {
 impl TopicTree {
     pub fn get_subscriptions(&self, publish_topic: &TopicName) -> Vec<SubScriber> {
         let mut results = Vec::with_capacity(self.subscribers as usize);
-        self.root_node
-            .get_subscriptions_rec(0, publish_topic, &mut results);
-        self.root_node
-            .get_subscriptions(publish_topic, &mut results);
+        // self.root_node
+        //     .get_subscriptions_rec(0, publish_topic, &mut results);
+        // self.root_node
+        //     .get_subscriptions(publish_topic, &mut results);
         self.root_node
             .get_subscriptions_arr(publish_topic, &mut results);
         results
@@ -53,6 +53,7 @@ struct TopicNode {
 impl TopicNode {
     /// All 3 implementations of get routes do the same thing, the array version is currently the
     /// fastest and therefore used, but it is also the least readable
+    #[allow(dead_code)]
     fn get_subscriptions(&self, publish_topic: &TopicName, results: &mut Vec<SubScriber>) {
         let mut vec1: Vec<&TopicNode> = Vec::with_capacity(3);
         let mut vec2: Vec<&TopicNode> = Vec::with_capacity(3);
@@ -80,6 +81,7 @@ impl TopicNode {
         }
     }
 
+    #[allow(dead_code)]
     fn get_subscriptions_arr(&self, publish_topic: &TopicName, results: &mut Vec<SubScriber>) {
         let mut curr_iter: bool = false;
         let mut iter_len = [0usize, 1usize];
@@ -113,6 +115,7 @@ impl TopicNode {
         }
     }
 
+    #[allow(dead_code)]
     fn get_subscriptions_rec(
         &self,
         curr_level: usize,
@@ -221,7 +224,7 @@ impl TopicNode {
     }
 
     fn get_sub_node_or_create(&mut self, topic_level: &str) -> &mut Self {
-        if !self.sub_nodes.contains_key(topic_level.clone()) {
+        if !self.sub_nodes.contains_key(topic_level) {
             self.sub_nodes
                 .insert(topic_level.to_owned(), TopicNode::default());
         }
@@ -269,7 +272,7 @@ impl SubscriptionInfo {
     }
 
     fn remove_client_subscription(&mut self, client_id: ClientId) {
-        let res = self.client_subscriptions.remove(&client_id);
+        let _res = self.client_subscriptions.remove(&client_id);
     }
 
     fn add_shared_subscription(&mut self, client_id: ClientId, qos: QoS, shared_group: String) {
@@ -279,7 +282,7 @@ impl SubscriptionInfo {
             .iter_mut()
             .find(|x| x.group_id == shared_group)
         {
-            group.clients.push(subscriber)
+            group.add_subscriber(subscriber);
         } else {
             self.shared_subscriptions
                 .push(ClientGroup::new(shared_group, subscriber))
@@ -296,7 +299,7 @@ impl SubscriptionInfo {
     }
 }
 
-/// The ClientGroup represents a single shared subscription. As the
+/// The ClientGroup represents a single shared subscription.
 #[derive(Debug, Clone)]
 struct ClientGroup {
     group_id: String,

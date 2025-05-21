@@ -13,8 +13,8 @@ pub enum  TopicTreeOperations {
 impl Absorb<TopicTreeOperations> for TopicTree {
     fn absorb_first(&mut self, operation: &mut TopicTreeOperations, _: &Self) {
         match operation {
-            AddSubscription(TopicFilter, ClientId, QoS) => {
-                self.add_subscription(TopicFilter.clone(), ClientId.clone(), QoS.clone())
+            AddSubscription(topic_filter, client_id, qos) => {
+                self.add_subscription(topic_filter.clone(), client_id.clone(), qos.clone())
             }
         }
     }
@@ -30,7 +30,7 @@ pub struct MqttTopicTree {
 }
 
 impl MqttTopicTree {
-    pub fn new() -> Self {
+    pub fn default() -> Self {
         let (write, read) = left_right::new::<TopicTree, TopicTreeOperations>();
         Self {
             read_handle: read,
